@@ -6,5 +6,9 @@
 </head>
 <body>
   <h2>ShortURL: <%= shortURL %></h2>
+  <form action="/urls/<%= shortURL %>" method="POST" style="margin:150px;">
+      <input id="editURL" type="url" name="editURL" placeholder="http:" style="width: 300px">
+      <input type = "submit" value="Update">
+  </form>
 </body>
 </html>
