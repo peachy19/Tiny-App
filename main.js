@@ -20,6 +20,19 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.post("/urls/", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/u/${shortURL}`);
+  console.log(`I am hit /u/${shortURL}` );
+});
+
+app.get("/u/:id", (req, res) => {
+  // let longURL = ...
+  console.log("/u/:id is hit");
+  res.redirect(urlDatabase[req.params.id]);
+});
 
 //Render HTML on path /urls
 app.get("/urls", (req, res) => {
@@ -46,7 +59,7 @@ function generateRandomString() {
     const set = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     for( let i=0; i < 6; i++ )
-        text += set.charAt(Math.floor(Math.random() * possible.length));
+        text += set.charAt(Math.floor(Math.random() * set.length));
 
     return text;
 }
