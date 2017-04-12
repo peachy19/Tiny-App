@@ -27,12 +27,16 @@ app.post("/urls/", (req, res) => {
   res.redirect(`/u/${shortURL}`);
   console.log(`I am hit /u/${shortURL}` );
 });
-
 app.get("/u/:id", (req, res) => {
   // let longURL = ...
   console.log("/u/:id is hit");
   res.redirect(urlDatabase[req.params.id]);
 });
+//Redirects to /urls after the deleting the selected url from the database
+app.post('/urls/:id/delete', (req,res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
+})
 
 //Render HTML on path /urls
 app.get("/urls", (req, res) => {
