@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+  <% include ./partials/_headers %>
+</head>
+<body>
+  <h2>Welcome to Tiny App</h2>
+    <% Object.keys(urls).forEach(function(url) { %>
+        <li><%= urls[url]%> <%= url %> <a href = "">Shortern your URL</a></li>
+    <% }); %>
+</body>
+</html>
