@@ -1,13 +1,28 @@
-var express = require("express");
-var app = express();
-var PORT = process.env.PORT || 8080; // default port 8080
+const express = require("express");
+const app = express();
+const PORT = process.env.PORT || 8080; // default port 8080
 
-var cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 //middleware to for parsing
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+
+//Fetch database of users
+//const users = require('./users');
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
 
 //Set the template engine to be ejs
 app.set("view engine", "ejs");
@@ -19,6 +34,22 @@ var urlDatabase = {
 //Displays the Home page
 app.get('/', (req, res) => res.send(" Welcome to Tiny App !"))
 
+//Lets user register
+app.get('/register', (req, res) => {
+  res.render("urls_register");
+});
+app.post('/register', (req, res) => {
+  //Storing in user information in the database
+  let id = generateRandomString();
+  users[id] = {};
+  users[id].user_id = id;
+  users[id].email = req.body.email;
+  users[id].password = req.body.password;
+  console.log(users);
+  res.cookie("id", id);
+  res.redirect('/');
+})
+
 //Add a new URL
 app.get("/urls/new", (req, res) => {
   let temp = setCookie(req);
@@ -29,7 +60,7 @@ app.get("/urls", (req, res) => {
  let temp = setCookie(req);
  res.render("urls_index", temp);
 });
-//Shows a Edit page for a certain url
+//Shows an Edit page for a id url
 app.get("/urls/:id", (req, res) => {
    let temp = setCookie(req);
   res.render("urls_show", temps);
