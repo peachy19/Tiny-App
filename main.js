@@ -10,19 +10,8 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 //Fetch database of users
-//const users = require('./users');
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-};
+const users = require('./users.js');
+
 
 //Set the template engine to be ejs
 app.set("view engine", "ejs");
@@ -32,22 +21,55 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 //Displays the Home page
-app.get('/', (req, res) => res.send(" Welcome to Tiny App !"))
+app.get('/', (req, res) => res.send(" Welcome to Tiny App !"));
 
-//Lets user register
+//Register page : GET
 app.get('/register', (req, res) => {
   res.render("urls_register");
 });
+//Handles Registration info : POST
 app.post('/register', (req, res) => {
-  //Storing in user information in the database
-  let id = generateRandomString();
-  users[id] = {};
-  users[id].user_id = id;
-  users[id].email = req.body.email;
-  users[id].password = req.body.password;
-  console.log(users);
-  res.cookie("id", id);
+  if(!req.body.email || !req.body.password){
+    res.statusCode = 400;
+    res.end(`Error 400 : Bad Request
+    Please input your email and password!`)
+  }
+  else{
+    const key = findUserByEmail(req.body.email);
+    console.log("user is", users[key]);
+    if(user){
+      res.statusCode = 400;
+      res.end(`Error 400 : Bad Request
+      Email already exists!`);
+      console.log(users);
+    }
+    else {
+      //Storing in user information in the database
+      let id = generateRandomString();
+      users[id] = {};
+      users[id].user_id = id;
+      users[id].email = req.body.email;
+      users[id].password = req.body.password;
+      console.log(users);
+      res.cookie("id", id);
+      res.redirect('/');
+    }
+  }
+});
+//GET - Login : Displays the login page
+app.get('/login', (req, res) => {
+  res.render('urls_login');
+})
+
+//POST - Login : Sets the cookie name to username
+app.post('/login', (req, res) => {
+  res.cookie("name", req.body.username);
   res.redirect('/');
+});
+//Logouts
+app.post('/logout', (req, res) => {
+ res.clearCookie('name');
+  res.redirect('/urls');
 })
 
 //Add a new URL
@@ -82,17 +104,7 @@ app.post("/urls/", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/u/${shortURL}`);
 });
-//Sets the cookie name to username
-app.post('/login', (req, res) => {
-  console.log("Cookies name", req.body.username);
-  res.cookie("name", req.body.username);
-  res.redirect('/');
-});
-//Logouts
-app.post('/logout', (req, res) => {
- res.clearCookie('name');
-  res.redirect('/urls');
-})
+
 
 //middle link for redirecting from shorturl to corresponding webpage
 app.get("/u/:id", (req, res) => {
@@ -108,6 +120,16 @@ app.get("/urls.json", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+//Checks for if email already exists in the database
+function findUserByEmail(email){
+  for(let key in users){
+    if(email === users[key].email){
+      console.log(users[key]);
+      return users[key];
+    }
+  }
+}
 
 function setCookie(req){
     let templateVars;
