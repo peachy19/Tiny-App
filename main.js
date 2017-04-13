@@ -20,8 +20,6 @@ var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-//Displays the Home page
-app.get('/', (req, res) => res.send(" Welcome to Tiny App !"));
 
 //Register page : GET
 app.get('/register', (req, res) => {
@@ -52,7 +50,7 @@ app.post('/register', (req, res) => {
       users[id].password = req.body.password;
       console.log(users);
       res.cookie("id", id);
-      res.redirect('/');
+      res.redirect('/urls');
     }
   }
 });
@@ -61,7 +59,7 @@ app.get('/login', (req, res) => {
   res.render('urls_login');
 })
 
-//POST - Login : Sets the cookie name to username
+//POST - Login : Handles login info, sets the cookie to id and redirects to homepage if user is authenticated
 app.post('/login', (req, res) => {
     //console.log("Cookies name", req.body.);
   const user = findUserByEmail(req.body.email);
@@ -69,7 +67,7 @@ app.post('/login', (req, res) => {
 
   if(user){
     if (user.password === req.body.password){
-      res.redirect('/');
+      res.redirect('/urls')
     }
     else{
       res.statusCode = 403;
@@ -82,11 +80,11 @@ app.post('/login', (req, res) => {
       User does not exists` );
   }
   res.cookie("id", user.id);
-  res.redirect('/');
+  res.redirect('/urls')
 });
 //Logouts
 app.post('/logout', (req, res) => {
- res.clearCookie('name');
+ res.clearCookie('id');
   res.redirect('/urls');
 })
 
