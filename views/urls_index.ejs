@@ -7,7 +7,10 @@
 <body>
   <h2>Welcome to Tiny App</h2>
     <% Object.keys(urls).forEach(function(url) { %>
-        <li><%= urls[url]%> <%= url %> <a href = "">Shortern your URL</a></li>
+        <li><%= url %> -> <%= urls[url]%> <a href = "/urls/<%= url %>"> Edit </a>
+        <form method="POST" action = '/urls/<%= url %>/delete'>
+          <input type="submit" value="Delete">
+        </form></li>
     <% }); %>
 </body>
 </html>
