@@ -21,28 +21,18 @@ app.get('/', (req, res) => res.send(" Welcome to Tiny App !"))
 
 //Add a new URL
 app.get("/urls/new", (req, res) => {
-   let templateVars = { username: req.cookies["name"] };
-  res.render("urls_new");
+  let temp = setCookie(req);
+  res.render("urls_new", temp);
 });
 //Displays all the urls
 app.get("/urls", (req, res) => {
-  let templateVars;
-  console.log(req);
-  if(req.cookies){
-    templateVars = { urls: urlDatabase,
-    username: req.cookies["name"] };
-  }
-  else {
-    templateVars = {urls: urlDatabase, username: null};
-  }
- res.render("urls_index", templateVars);
+ let temp = setCookie(req);
+ res.render("urls_index", temp);
 });
 //Shows a Edit page for a certain url
 app.get("/urls/:id", (req, res) => {
-  // let templateVars = { shortURL: req.params.id,
-  //   username: req.cookies["name"], };
-  // console.log(req.cookies)
-  res.render("urls_show", templateVars);
+   let temp = setCookie(req);
+  res.render("urls_show", temps);
 });
 
 //Redirects to /urls after the deleting the selected url from the database
@@ -66,6 +56,11 @@ app.post('/login', (req, res) => {
   console.log("Cookies name", req.body.username);
   res.cookie("name", req.body.username);
   res.redirect('/');
+});
+//Logouts
+app.post('/logout', (req, res) => {
+ res.clearCookie('name');
+  res.redirect('/urls');
 })
 
 //middle link for redirecting from shorturl to corresponding webpage
@@ -78,10 +73,23 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//Listen to the requests from brower at PORT
+//Listen to the requests from browser at PORT
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+function setCookie(req){
+    let templateVars;
+  console.log(req);
+  if(req.cookies){
+    templateVars = { urls: urlDatabase,
+    username: req.cookies["name"] };
+  }
+  else {
+    templateVars = {urls: urlDatabase, username: null};
+  }
+  return templateVars;
+}
 
 function generateRandomString() {
   let text = "";
