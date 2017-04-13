@@ -35,19 +35,19 @@ app.post('/register', (req, res) => {
     Please input your email and password!`)
   }
   else{
-    const key = findUserByEmail(req.body.email);
-    console.log("user is", users[key]);
+    const user = findUserByEmail(req.body.email);
+    //console.log("user is", user);
     if(user){
       res.statusCode = 400;
       res.end(`Error 400 : Bad Request
       Email already exists!`);
-      console.log(users);
+      //console.log(users);
     }
     else {
       //Storing in user information in the database
       let id = generateRandomString();
       users[id] = {};
-      users[id].user_id = id;
+      users[id].id = id;
       users[id].email = req.body.email;
       users[id].password = req.body.password;
       console.log(users);
@@ -63,7 +63,25 @@ app.get('/login', (req, res) => {
 
 //POST - Login : Sets the cookie name to username
 app.post('/login', (req, res) => {
-  res.cookie("name", req.body.username);
+    //console.log("Cookies name", req.body.);
+  const user = findUserByEmail(req.body.email);
+  //console.log("USer is", user);
+
+  if(user){
+    if (user.password === req.body.password){
+      res.redirect('/');
+    }
+    else{
+      res.statusCode = 403;
+      res.end(`Error 403 : Forbidden
+      Password already exists` );
+    }
+  } else {
+      res.statusCode = 403;
+      res.end(`Error 403 : Forbidden
+      User does not exists` );
+  }
+  res.cookie("id", user.id);
   res.redirect('/');
 });
 //Logouts
@@ -74,17 +92,17 @@ app.post('/logout', (req, res) => {
 
 //Add a new URL
 app.get("/urls/new", (req, res) => {
-  let temp = setCookie(req);
+  let temp = makeTemplateVars(req);
   res.render("urls_new", temp);
 });
 //Displays all the urls
 app.get("/urls", (req, res) => {
- let temp = setCookie(req);
+ let temp = makeTemplateVars(req);
  res.render("urls_index", temp);
 });
 //Shows an Edit page for a id url
 app.get("/urls/:id", (req, res) => {
-   let temp = setCookie(req);
+   let temp = makeTemplateVars(req);
   res.render("urls_show", temps);
 });
 
@@ -121,28 +139,43 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Checks for if email already exists in the database
+//Return the user for the email matched
 function findUserByEmail(email){
   for(let key in users){
     if(email === users[key].email){
-      console.log(users[key]);
+      //console.log(users[key]);
       return users[key];
     }
   }
 }
 
-function setCookie(req){
-    let templateVars;
-  console.log(req);
+//Return the user for the id matched
+function findUserByID(id){
+  console.log("ID 1", id);
+  for(let key in users){
+    console.log("ID", users[key].id);
+    if(id === users[key].id){
+      console.log("User in find function",users[key]);
+      return users[key];
+    }
+  }
+}
+
+function makeTemplateVars(req){
+  let templateVars;
+  console.log(req.cookies);
+  let temp = findUserByID(req.cookies.id);
+  console.log("USer found by cookie is ", temp);
   if(req.cookies){
     templateVars = { urls: urlDatabase,
-    username: req.cookies["name"] };
+    user: temp};
   }
   else {
-    templateVars = {urls: urlDatabase, username: null};
+    templateVars = {urls: urlDatabase, user: null};
   }
   return templateVars;
 }
+
 
 function generateRandomString() {
   let text = "";
