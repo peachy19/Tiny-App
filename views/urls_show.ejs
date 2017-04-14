@@ -6,10 +6,9 @@
 </head>
 <body>
   <h5><%= shortURL%> : <%= url %></h5>
-
   <form action="/urls/<%= shortURL %>" method="POST" style="margin:150px;">
-      <input id="editURL" type="url" name="editURL" placeholder="<%= url %>" style="width: 300px">
-      <input type = "submit" value="Update">
+    <input id="editURL" type="url" name="editURL" placeholder="<%= url %>" style="width: 300px">
+    <input type = "submit" value="Update">
   </form>
   <form method="POST" action = '/urls/<%= shortURL%>/delete'>
       <input type="submit" value="Delete">
