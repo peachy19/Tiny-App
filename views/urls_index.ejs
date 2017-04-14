@@ -7,9 +7,9 @@
 <body>
   <h2>Welcome to Tiny App</h2>
     <% if(urls) { %>
-      <% Object.keys(urls).forEach(function(url) { %>
-          <li><%= url %> -> <%= urls[url]%> <a href = "/urls/<%= url %>"> Edit </a>
-          <form method="POST" action = '/urls/<%= url %>/delete'>
+      <% Object.keys(urls).forEach(function(everyUrl) { %>
+          <li><%= everyUrl %> -> <%= urls[everyUrl].url %> <a href = "/urls/<%= everyUrl %>"> Edit </a>
+          <form method="POST" action = '/urls/<%= everyUrl %>/delete'>
             <input type="submit" value="Delete">
           </form></li>
       <% }); %>
