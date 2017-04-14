@@ -1,6 +1,5 @@
 <% if(user){ %>
-  <p><%= user.email %>, You are logged in! </p>
-  <form method="POST" action = '/logout'>
+  <p><%= user.email %>, You are logged in! </p> <a href = '/urls'>My links</a><form method="POST" action = '/logout'>
           <input type="submit" value="Logout">
         </form>
 <% } else { %>
