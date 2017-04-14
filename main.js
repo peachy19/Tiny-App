@@ -7,6 +7,17 @@ const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+// const cookieSession = require('cookie-session');
+
+// app.use(cookie-session({
+//   name: 'session',
+//   keys: ["enlightenment"],
+
+//   // Cookie Options
+//   maxAge: 24 * 60 * 60 * 1000 // 24 hours
+// }
+//   ));
+
 //middleware to for parsing
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -112,16 +123,16 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls/", (req, res) => {
   const shortURL = generateRandomString();
 
-  // urlDatabase[shortURL] = {};
-  // urlDatabase[shortURL].user_id = req.cookies.id;
-  // urlDatabase[shortURL].url = req.body.longURL;
-  // console.log(urlDatabase);
-  if(!urlDatabase[req.cookies.id]){
-    urlDatabase[req.cookies.id] = {};
-  }
-  urlDatabase[req.cookies.id][shortURL] = req.body.longURL;
-
+  urlDatabase[shortURL] = {};
+  urlDatabase[shortURL].user_id = req.cookies.id;
+  urlDatabase[shortURL].url = req.body.longURL;
   console.log(urlDatabase);
+  // if(!urlDatabase[req.cookies.id]){
+  //   urlDatabase[req.cookies.id] = {};
+  // }
+  // urlDatabase[req.cookies.id][shortURL] = req.body.longURL;
+
+  // console.log(urlDatabase);
   console.log(`url is /u/${shortURL}`)
   res.redirect(`/u/${shortURL}`);
 });
@@ -134,7 +145,7 @@ app.get("/urls", (req, res) => {
 
 //POST - Delete : Redirects to /urls after the deleting the selected url from the database
 app.post('/urls/:id/delete', (req,res) => {
-  delete urlDatabase[req.cookies.id][req.params.id];
+  delete urlDatabase[req.params.id];
   res.redirect('/urls');
 })
 //GET - Edit : Shows an Edit page for a id url
@@ -146,14 +157,14 @@ app.get("/urls/:id", (req, res) => {
 });
 //POST - Edit : Redirects to /urls after updating the selected url in the database
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.cookies.id][req.params.id] = req.body.editURL;
+  urlDatabase[req.params.id].url = req.body.editURL;
   res.redirect('/urls');
 })
 
 //middle link for redirecting from shorturl to corresponding webpage
 app.get("/u/:id", (req, res) => {
   console.log("/u/:id is hit");
-  res.redirect(urlDatabase[req.cookies.id][req.params.id]);
+  res.redirect(urlDatabase[req.params.id].url);
 });
 
 //Send the json of the urlDatabase object
@@ -197,13 +208,25 @@ function makeTemplateVars(req){
   let temp = findUserByID(req.cookies.id);
   //console.log("USer found by cookie is ", temp);
   if(req.cookies){
-    templateVars = { urls: urlDatabase[req.cookies.id],
+    templateVars = { urls: urlsForUser(req.cookies.id),
     user: temp};
   }
   else {
     templateVars = {urls: null, user: null};
   }
   return templateVars;
+}
+
+function urlsForUser(id){
+  console.log("ID ", id);
+  var temp_urls = {};
+  for(let key in urlDatabase){
+    if(urlDatabase[key]['user_id'] === id){
+      temp_urls[key] = urlDatabase[key];
+    }
+  }
+  console.log("Passed urls are", temp_urls);
+  return temp_urls;
 }
 
 
