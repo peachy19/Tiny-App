@@ -16,16 +16,19 @@ const users = require('./users.js');
 //Set the template engine to be ejs
 app.set("view engine", "ejs");
 
-var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+// var urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
-//Register page : GET
+var urlDatabase = {};
+
+//GET - Register : Displays the Register page
 app.get('/register', (req, res) => {
   res.render("urls_register");
 });
-//Handles Registration info : POST
+
+//POST - Register : Handles Registration info
 app.post('/register', (req, res) => {
   if(!req.body.email || !req.body.password){
     res.statusCode = 400;
@@ -48,83 +51,105 @@ app.post('/register', (req, res) => {
       users[id].id = id;
       users[id].email = req.body.email;
       users[id].password = req.body.password;
-      console.log(users);
+      console.log("Users are", users);
       res.cookie("id", id);
       res.redirect('/urls');
     }
   }
 });
+
 //GET - Login : Displays the login page
 app.get('/login', (req, res) => {
   res.render('urls_login');
-})
+});
 
 //POST - Login : Handles login info, sets the cookie to id and redirects to homepage if user is authenticated
 app.post('/login', (req, res) => {
-    //console.log("Cookies name", req.body.);
   const user = findUserByEmail(req.body.email);
   //console.log("USer is", user);
 
   if(user){
     if (user.password === req.body.password){
+      res.cookie("id", user.id);
       res.redirect('/urls')
     }
     else{
       res.statusCode = 403;
       res.end(`Error 403 : Forbidden
-      Password already exists` );
+      Password does not match` );
     }
   } else {
       res.statusCode = 403;
       res.end(`Error 403 : Forbidden
       User does not exists` );
   }
-  res.cookie("id", user.id);
-  res.redirect('/urls')
 });
-//Logouts
+
+//POST - Logout : Logs the user out and clears the cookie
 app.post('/logout', (req, res) => {
  res.clearCookie('id');
   res.redirect('/urls');
-})
-
-//Add a new URL
-app.get("/urls/new", (req, res) => {
-  let temp = makeTemplateVars(req);
-  res.render("urls_new", temp);
 });
-//Displays all the urls
+
+//GET - Add : Add a new URL
+app.get("/urls/new", (req, res) => {
+  console.log("ID is", req.cookies.id);
+  if(!req.cookies.id){
+    res.redirect('/urls');
+  }
+  else{
+     let temp = makeTemplateVars(req);
+  res.render("urls_new", temp);
+  }
+
+});
+
+//POST - Add : Redirects the url to /u/shorturl after generating and assigning a random string to longURL
+app.post("/urls/", (req, res) => {
+  const shortURL = generateRandomString();
+
+  // urlDatabase[shortURL] = {};
+  // urlDatabase[shortURL].user_id = req.cookies.id;
+  // urlDatabase[shortURL].url = req.body.longURL;
+  // console.log(urlDatabase);
+  if(!urlDatabase[req.cookies.id]){
+    urlDatabase[req.cookies.id] = {};
+  }
+  urlDatabase[req.cookies.id][shortURL] = req.body.longURL;
+
+  console.log(urlDatabase);
+  console.log(`url is /u/${shortURL}`)
+  res.redirect(`/u/${shortURL}`);
+});
+
+//GET - Display : Displays all the urls
 app.get("/urls", (req, res) => {
  let temp = makeTemplateVars(req);
  res.render("urls_index", temp);
 });
-//Shows an Edit page for a id url
-app.get("/urls/:id", (req, res) => {
-   let temp = makeTemplateVars(req);
-  res.render("urls_show", temps);
-});
 
-//Redirects to /urls after the deleting the selected url from the database
+//POST - Delete : Redirects to /urls after the deleting the selected url from the database
 app.post('/urls/:id/delete', (req,res) => {
-  delete urlDatabase[req.params.id];
+  delete urlDatabase[req.cookies.id][req.params.id];
   res.redirect('/urls');
 })
-//Redirects to /urls after updating the selected url in the database
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.editURL;
-  res.redirect('/urls');
-})
-//Redirects the url to /u/shorturl after generating and assigning a random string to longURL
-app.post("/urls/", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/u/${shortURL}`);
+//GET - Edit : Shows an Edit page for a id url
+app.get("/urls/:id", (req, res) => {
+   let temp = { shortURL: req.params.id,
+    user: findUserByID(req.cookies.id)};
+   //console.log("Tmp is", temp);
+  res.render("urls_show", temp);
 });
-
+//POST - Edit : Redirects to /urls after updating the selected url in the database
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.cookies.id][req.params.id] = req.body.editURL;
+  res.redirect('/urls');
+})
 
 //middle link for redirecting from shorturl to corresponding webpage
 app.get("/u/:id", (req, res) => {
-  res.redirect(urlDatabase[req.params.id]);
+  console.log("/u/:id is hit");
+  res.redirect(urlDatabase[req.cookies.id][req.params.id]);
 });
 
 //Send the json of the urlDatabase object
@@ -139,9 +164,12 @@ app.listen(PORT, () => {
 
 //Return the user for the email matched
 function findUserByEmail(email){
+   //console.log("email 1", email);
   for(let key in users){
+
+    //console.log("Email", users[key].email);
     if(email === users[key].email){
-      //console.log(users[key]);
+      //console.log("Users in find email",users[key]);
       return users[key];
     }
   }
@@ -149,11 +177,11 @@ function findUserByEmail(email){
 
 //Return the user for the id matched
 function findUserByID(id){
-  console.log("ID 1", id);
+  //console.log("ID 1", id);
   for(let key in users){
-    console.log("ID", users[key].id);
+    //console.log("ID", users[key].id);
     if(id === users[key].id){
-      console.log("User in find function",users[key]);
+      //console.log("User in find function",users[key]);
       return users[key];
     }
   }
@@ -161,15 +189,15 @@ function findUserByID(id){
 
 function makeTemplateVars(req){
   let templateVars;
-  console.log(req.cookies);
+  //console.log(req.cookies);
   let temp = findUserByID(req.cookies.id);
-  console.log("USer found by cookie is ", temp);
+  //console.log("USer found by cookie is ", temp);
   if(req.cookies){
-    templateVars = { urls: urlDatabase,
+    templateVars = { urls: urlDatabase[req.cookies.id],
     user: temp};
   }
   else {
-    templateVars = {urls: urlDatabase, user: null};
+    templateVars = {urls: null, user: null};
   }
   return templateVars;
 }
