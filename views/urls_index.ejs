@@ -6,11 +6,15 @@
 </head>
 <body>
   <h2>Welcome to Tiny App</h2>
-    <% Object.keys(urls).forEach(function(url) { %>
-        <li><%= url %> -> <%= urls[url]%> <a href = "/urls/<%= url %>"> Edit </a>
-        <form method="POST" action = '/urls/<%= url %>/delete'>
-          <input type="submit" value="Delete">
-        </form></li>
-    <% }); %>
+    <% if(urls) { %>
+      <% Object.keys(urls).forEach(function(url) { %>
+          <li><%= url %> -> <%= urls[url]%> <a href = "/urls/<%= url %>"> Edit </a>
+          <form method="POST" action = '/urls/<%= url %>/delete'>
+            <input type="submit" value="Delete">
+          </form></li>
+      <% }); %>
+    <% } else { %>
+    <p> No URLS for you </p>
+    <% } %>
 </body>
 </html>
