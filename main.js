@@ -7,6 +7,10 @@ const app = express();
 //Set the template engine to be ejs
 app.set("view engine", "ejs");
 
+const PORT = process.env.PORT || 3000;
+const users = {};
+const urlDatabase = {};
+
 //middleware to for parsing
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -15,23 +19,18 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000
 }));
 
-const PORT = process.env.PORT || 3000;
-const users = {};
-const urlDatabase = {};
+//middleware for defining locals
+app.use(function(req,res,next){
+  res.locals.user = users[req.session.id];
+  res.locals.urls = urlsForUser(req.session.id);
+  next();
+})
+
 
 //Return the user for the email matched
 function findUserByEmail(email){
   for(let key in users){
     if(email === users[key].email){
-      return users[key];
-    }
-  }
-}
-
-//Return the user for the id matched
-function findUserByID(id){
-  for(let key in users){
-    if(id === users[key].id){
       return users[key];
     }
   }
@@ -46,18 +45,6 @@ function urlsForUser(id){
     }
   }
   return temp;
-}
-
-//Setup template vars for the headers and html pages
-function makeTemplateVars(req){
-  let templateVars;
-  let temp = findUserByID(req.session.id);
-  if(req.session){
-    templateVars = { urls: urlsForUser(req.session.id), user: temp};
-  } else {
-    templateVars = {urls: null, user: null};
-  }
-  return templateVars;
 }
 
 //Setup the templateVars to be send to error page
@@ -158,8 +145,7 @@ app.get("/urls/new", (req, res) => {
     res.statusCode = 401;
     res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
   } else{
-    let temp = makeTemplateVars(req);
-    res.render("urls_new", temp);
+    res.render("urls_new");
   }
 
 });
@@ -170,8 +156,7 @@ app.get("/urls", (req, res) => {
     res.statusCode = 401;
     res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
   } else {
-    let temp = makeTemplateVars(req);
-    res.render("urls_index", temp);
+    res.render("urls_index");
   }
 
 });
@@ -202,8 +187,8 @@ app.get("/urls/:id", (req, res) => {
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
     }
-    if(urlDatabase[req.params.id].userID === findUserByID(req.session.id).id){
-      let temp = { shortURL: req.params.id, url: urlDatabase[req.params.id].url, user: findUserByID(req.session.id)};
+    if(urlDatabase[req.params.id].userID === req.session.id){
+      let temp = { shortURL: req.params.id, url: urlDatabase[req.params.id].url, user: users[req.session.id]};
       res.render("urls_show", temp);
     } else {
       res.statusCode = 403;
@@ -221,7 +206,7 @@ app.post("/urls/:id", (req, res) => {
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
     }
-    if(urlDatabase[req.params.id].userID === findUserByID(req.session.id).id){
+    if(urlDatabase[req.params.id].userID === req.session.id){
       urlDatabase[req.params.id].url = req.body.editURL;
       res.redirect(`/urls/${req.params.id}`);
     } else {
@@ -242,7 +227,7 @@ app.post('/urls/:id/delete', (req, res) => {
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
     }
-    if(urlDatabase[req.params.id].userID === findUserByID(req.session.id).id){
+    if(urlDatabase[req.params.id].userID === req.session.id){
       delete urlDatabase[req.params.id];
       res.redirect('/urls');
     } else {
@@ -268,4 +253,3 @@ app.get("/u/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
