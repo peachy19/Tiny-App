@@ -24,6 +24,15 @@ app.use(function(req,res,next){
   res.locals.user = users[req.session.id];
   res.locals.urls = urlsForUser(req.session.id);
   next();
+});
+
+app.use('/urls',function(req,res,next){
+  if (req.session.id) {
+    next();
+  } else {
+    res.statusCode = 401;
+    res.render('error',errorPageSetup(401, "'You are not logged-in. bbbb Please log-in.'"))
+  }
 })
 
 
@@ -141,67 +150,44 @@ app.post('/logout', (req, res) => {
 
 //GET - Add : Add a new URL
 app.get("/urls/new", (req, res) => {
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else{
     res.render("urls_new");
-  }
-
 });
 
 //GET - Display : Displays all the urls
 app.get("/urls", (req, res) => {
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else {
     res.render("urls_index");
-  }
-
 });
 
 //POST - Add : Redirects the url to /u/shorturl after generating and assigning a random string to longURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else{
     urlDatabase[shortURL] = {};
     urlDatabase[shortURL].userID = req.session.id;
     urlDatabase[shortURL].url = req.body.longURL;
     console.log(urlDatabase);
     res.redirect(`urls/${shortURL}`);
-  }
+  //}
 });
 
 //GET - Edit : Shows an Edit page for a id url
 app.get("/urls/:id", (req, res) => {
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else {
     if(!urlDatabase[req.params.id]){
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
-    }
-    if(urlDatabase[req.params.id].userID === req.session.id){
+    } else {
+      if(urlDatabase[req.params.id].userID === req.session.id){
       let temp = { shortURL: req.params.id, url: urlDatabase[req.params.id].url, user: users[req.session.id]};
       res.render("urls_show", temp);
     } else {
       res.statusCode = 403;
       res.end("You are trying to access the url that doesn't belong to you.");
     }
-  }
+    }
+
+  //}
 });
 //POST - Edit : Redirects to /urls:id after updating the selected url in the database
 app.post("/urls/:id", (req, res) => {
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else {
     if(!urlDatabase[req.params.id]){
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
@@ -213,16 +199,11 @@ app.post("/urls/:id", (req, res) => {
       res.statusCode = 403;
       res.end("You are trying to access the url that doesn't belong to you.");
     }
-  }
 
 });
 
 //POST - Delete : Redirects to /urls after the deleting the selected url from the database
 app.post('/urls/:id/delete', (req, res) => {
-  if(!req.session.id){
-    res.statusCode = 401;
-    res.render('error', errorPageSetup(401, 'You are not logged-in. Please log-in.'));
-  } else {
     if(!urlDatabase[req.params.id]){
       res.statusCode = 404;
       res.send("Error 404 : Page not found");
@@ -234,8 +215,6 @@ app.post('/urls/:id/delete', (req, res) => {
       res.statusCode = 403;
       res.end("You are trying to access the url that doesn't belong to you.");
     }
-  }
-
 });
 
 //middle link for redirecting from shorturl to corresponding webpage
